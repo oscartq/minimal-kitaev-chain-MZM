@@ -1,0 +1,1 @@
+# minimal-kitaev-chain-MZM
