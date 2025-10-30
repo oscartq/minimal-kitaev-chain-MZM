@@ -1,11 +1,7 @@
-"""
-Utility functions for Gaussian state preparation and BCS spectrum computation.
-Updated for modern Qiskit versions (1.0+).
-"""
-
 import numpy as np
 import openfermion
 from openfermion.ops import FermionOperator
+from qiskit_nature.second_q.operators import FermionicOp
 from openfermion import gaussian_state_preparation_circuit
 from qiskit.circuit.library import UnitaryGate
 from qiskit import QuantumRegister, QuantumCircuit
@@ -43,6 +39,16 @@ def orbital_combinations(nqbit):
     
     return ordering
 
+def majorana_op(m, nqbit):
+    j = m // 2  # site index (0..nqbit-1)
+    if m % 2 == 0:
+        # m = 0,2,4,... -> γ_{2j-1} = a_j + a_j^\dagger
+        return (FermionicOp({f"-_{j}": 1.0}, num_spin_orbitals=nqbit)
+                + FermionicOp({f"+_{j}": 1.0}, num_spin_orbitals=nqbit))
+    else:
+        # m = 1,3,5,... -> γ_{2j} = -i(a_j - a_j^\dagger) = (-i) a_j + (i) a_j^\dagger
+        return (-1.0j) * FermionicOp({f"-_{j}": 1.0}, num_spin_orbitals=nqbit) \
+               + (1.0j) * FermionicOp({f"+_{j}": 1.0}, num_spin_orbitals=nqbit)
 
 def YXXY(fi):
     """
