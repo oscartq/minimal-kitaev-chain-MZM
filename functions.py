@@ -14,6 +14,8 @@ def orbital_combinations(nqbit):
     Example:
         >>> orbital_combinations(3)
         [[], [0], [1], [2], [0, 1], [0, 2], [1, 2], [0, 1, 2]]
+        >>> orbital_combinations(2)
+        [[], [0], [1], [0, 1]]
     """
     count_ar = []
     aux_ar = []
@@ -176,3 +178,51 @@ def compute_bdg_spectrum(nqbit, nsteps, eps_max, t, Delta, const=1.0):
         Fermi_En_Mi.append(-eps * (nqbit / 2))
 
     return Energy_BdG, Fermi_En_Pl, Fermi_En_Mi
+
+
+from qiskit_nature.second_q.mappers import JordanWignerMapper
+from qiskit.quantum_info import SparsePauliOp
+nqbit = 2
+qubit_converter = JordanWignerMapper()
+
+
+# gamma0 = majorana_op(0, nqbit)
+# majcorr_operators = {}
+# nMaj = 2 * nqbit
+# for k in range(1, nMaj):
+#     gammak = majorana_op(k, nqbit)
+#     majcorr_aux = 1.0j * (gamma0 @ gammak)  # this is Hermitian for k>0
+#     majcorr_operators[k] = qubit_converter.map(majcorr_aux)
+    
+# print(majcorr_operators)
+
+# majpol = SparsePauliOp("X").tensor(SparsePauliOp("I"))
+# print(majpol)
+# cdagger0 = FermionicOp({f"+_{0}": 1.0}, num_spin_orbitals=nqbit)
+# cdagger_operators = {}
+# for k in range(1, nqbit):
+#     cdaggerk = FermionicOp({f"+_{k}": 1.0}, num_spin_orbitals=nqbit)
+#     cdagger_aux = cdagger0 @ cdaggerk
+#     cdagger_operators[k] = qubit_converter.map(cdagger_aux)
+
+# c0 = FermionicOp({f"-_{0}": 1.0}, num_spin_orbitals=nqbit)
+# c_operators = {}
+# for k in range(1, nqbit):
+#     ck = FermionicOp({f"-_{k}": 1.0}, num_spin_orbitals=nqbit)
+#     c_aux = c0 @ ck
+#     c_operators[k] = qubit_converter.map(c_aux)
+
+# print(cdagger_operators)
+# print(c_operators)
+
+parity_op = FermionicOp({"": 1.0, "+_0 -_0": -2.0}, num_spin_orbitals=nqbit)
+    
+for i in range(1, nqbit):
+    term = FermionicOp({"": 1.0, f"+_{i} -_{i}": -2.0}, num_spin_orbitals=nqbit)
+    parity_op = parity_op @ term
+    
+parity_op_JW = qubit_converter.map(parity_op)
+print(parity_op_JW)
+
+polarization_op = SparsePauliOp("X").tensor(SparsePauliOp("X"))
+print(polarization_op)

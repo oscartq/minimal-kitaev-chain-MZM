@@ -343,7 +343,7 @@ def plot_number_expectation(results):
         i0p = int(np.argmax(eps_list >= 0))
     else:
         i0p = int(np.argmin(np.abs(eps_list)))
-
+    
     # precompute labels
     fock_labels = [fock_label(occ, nqbit) for occ in orb_comb]
 
@@ -387,4 +387,69 @@ def plot_number_expectation(results):
     ax.legend()
 
     plt.savefig("figures/plot_number_expectation.png")
+    plt.show()
+
+
+def plot_polarization(results):
+    """
+    Plot parity expectation values ⟨P⟩ for all many-body branches vs ε.
+    Colors encode the parity at ε ≈ 0^+ (red: +1, blue: -1).
+    """
+    eps_list = np.asarray(results['eps_list'])     # (n_eps,)
+    polarization  = np.asarray(results['polarization'])       # (n_eps, 2^N)
+    nqbit    = results['nqbit']
+    orb_comb = results.get('orb_comb', None)
+
+    # helper: occupied-orbital list -> Fock label |n0 n1 ... nN-1>
+    def fock_label(occ_list, nqbit):
+        bits = ['1' if i in occ_list else '0' for i in range(nqbit)]
+        return r"$|" + ''.join(bits) + r" \rangle$"
+    
+    # precompute labels
+    fock_labels = [fock_label(occ, nqbit) for occ in orb_comb]
+
+    # choose the index closest to 0^+ to classify branch color
+    if np.any(eps_list >= 0):
+        i0p = int(np.argmax(eps_list >= 0))
+    else:
+        i0p = int(np.argmin(np.abs(eps_list)))
+
+    fig, ax = plt.subplots(figsize=(10, 7))
+
+    shown_plus, shown_minus = False, False
+    for r in range(0, 2**nqbit):
+        par0 = polarization[i0p, r]
+        color = 'red' if par0 > 0 else 'blue'
+        label = None
+        if par0 > 0 and not shown_plus:
+            label = r'$\langle\mathcal{C}\rangle=+1$'
+            shown_plus = True
+        elif par0 <= 0 and not shown_minus:
+            label = r'$\langle\mathcal{C}\rangle=-1$'
+            shown_minus = True
+
+        ax.plot(eps_list, polarization[:, r], color=color, linewidth=1.8, marker='x', label=label)
+        # annotate at the right edge
+        ax.annotate(fock_labels[r],
+                    xy=(eps_list[-1], polarization[-1, r]),
+                    xytext=(2, 0), textcoords='offset points',
+                    backgroundcolor=color,
+                    color='w', fontsize=12)
+        
+    # axes & styling
+    ax.set_xlim(eps_list.min(), eps_list.max())
+    ax.set_ylim(-1.05, 1.05)
+    ax.set_yticks(np.linspace(-1, 1, 5))
+    xticks = np.linspace(eps_list.min(), eps_list.max(), 7)
+    ax.set_xticks(xticks)
+
+    ax.set_xlabel(r'$\varepsilon$', fontsize=18)
+    ax.set_ylabel(r'$\langle\mathcal{C}\rangle$', fontsize=18)
+    ax.set_title('Majorana polarization')
+
+    ax.tick_params(axis='x', labelsize=16)
+    ax.tick_params(axis='y', labelsize=16)
+    ax.legend()
+
+    plt.savefig("figures/plot_polarization.png")
     plt.show()
