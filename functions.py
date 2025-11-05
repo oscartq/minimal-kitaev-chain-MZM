@@ -215,14 +215,14 @@ qubit_converter = JordanWignerMapper()
 # print(cdagger_operators)
 # print(c_operators)
 
-parity_op = FermionicOp({"": 1.0, "+_0 -_0": -2.0}, num_spin_orbitals=nqbit)
+# parity_op = FermionicOp({"": 1.0, "+_0 -_0": -2.0}, num_spin_orbitals=nqbit)
     
-for i in range(1, nqbit):
-    term = FermionicOp({"": 1.0, f"+_{i} -_{i}": -2.0}, num_spin_orbitals=nqbit)
-    parity_op = parity_op @ term
+# for i in range(1, nqbit):
+#     term = FermionicOp({"": 1.0, f"+_{i} -_{i}": -2.0}, num_spin_orbitals=nqbit)
+#     parity_op = parity_op @ term
     
-parity_op_JW = qubit_converter.map(parity_op)
-print(parity_op_JW)
+# parity_op_JW = qubit_converter.map(parity_op)
+# print(parity_op_JW)
 
-polarization_op = SparsePauliOp("X").tensor(SparsePauliOp("X"))
-print(polarization_op)
+# polarization_op = SparsePauliOp("X").tensor(SparsePauliOp("X"))
+# print(polarization_op)
