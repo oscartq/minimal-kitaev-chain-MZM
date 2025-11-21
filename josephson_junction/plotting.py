@@ -1,5 +1,5 @@
 
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import numpy as np
 
 def plot_gaus_vs_diag_bdg(results):

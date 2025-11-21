@@ -15,9 +15,9 @@ def run_simulation(nqbit=4, nsteps=20, eps=[0,0,0,0], t=1.0, Delta=1.0, tc=1.0):
     t1 = time.time()
 
     # Create Estimator instance (for exact statevector simulation)
-    #estimator = StatevectorEstimator()
-    backend = FakeBrisbane()
-    estimator = BackendEstimatorV2(backend=backend)
+    estimator = StatevectorEstimator()
+    # backend = FakeBrisbane()
+    # estimator = BackendEstimatorV2(backend=backend)
 
     print(rf"Starting simulation with nqbit={nqbit}, theta range: 0 to $2\pi$, nsteps={nsteps}")
     print(f"Total number of theta points: {nsteps}")

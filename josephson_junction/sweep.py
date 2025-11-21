@@ -11,8 +11,6 @@ from functions import majorana_op, orbital_combinations, gauss_state_qiskit
 
 
 def build_hamiltonian_jj(nqbit, eps, t=1.0, Delta=1.0, theta=0.0, tc=0.5):
-    eps = np.asarray(eps, dtype=complex)
-
     ham_aux = FermionicOp({"": 0.0}, num_spin_orbitals=nqbit)
     circ_aux1, circ_aux2 = "", ""
 
@@ -51,8 +49,6 @@ def build_hamiltonian_jj(nqbit, eps, t=1.0, Delta=1.0, theta=0.0, tc=0.5):
 
 
 def compute_correlations_exact_pair(nqbit, eps, t=1.0, Delta=1.0, theta=np.pi, tc=0.5):
-
-    eps = np.asarray(eps, dtype=complex)
     orb_comb = orbital_combinations(nqbit)
     orb_comb_str = [str(x) for x in orb_comb]
 
@@ -65,7 +61,7 @@ def compute_correlations_exact_pair(nqbit, eps, t=1.0, Delta=1.0, theta=np.pi, t
 
     qubit_converter = JordanWignerMapper()
 
-    # Operators for γ0γk, k=1..nMaj-1
+    # Operators for γ0γk, k=1..4
     kvals_g0 = np.arange(1, 4, dtype=int)
     corr_ops_qubit_g0 = []
     for k in kvals_g0:
@@ -81,23 +77,21 @@ def compute_correlations_exact_pair(nqbit, eps, t=1.0, Delta=1.0, theta=np.pi, t
 
     estimator_exact = StatevectorEstimator()
 
-    correlations_g0 = np.full((2**nqbit, len(kvals_g0)), np.nan, dtype=float)
-    correlations_g4 = np.full((2**nqbit, len(kvals_g4)), np.nan, dtype=float)
+    correlations_g0 = []
+    correlations_g4 = []
 
     for q in range(2**nqbit):
         circuit = gauss_state_qiskit(circ_aux, orb_comb[q], nqbit, eps)[0]
 
-        # Batch both sets at once to save overhead
-        pub_list = [(circuit, obs) for obs in (corr_ops_qubit_g0 + corr_ops_qubit_g4)]
-        res = estimator_exact.run(pub_list).result()
+        job_g0 = estimator_exact.run([(circuit, corr_ops_qubit_g0)])
+        result_g0 = job_g0.result()
+        val_g0 = result_g0[0].data.evs
+        correlations_g0.append(val_g0)
 
-        # Unpack back into the two arrays
-        # first block: len(kvals_g0), second block: len(kvals_g4)
-        for i in range(len(kvals_g0)):
-            correlations_g0[q, i] = res[i].data.evs
-        offset = len(kvals_g0)
-        for i in range(len(kvals_g4)):
-            correlations_g4[q, i] = res[offset + i].data.evs
+        job_g4 = estimator_exact.run([(circuit, corr_ops_qubit_g0)])
+        result_g4 = job_g4.result()
+        val_g4 = result_g4[0].data.evs
+        correlations_g4.append(val_g4)
 
     return {
         "correlations_g0": correlations_g0,
@@ -171,18 +165,12 @@ def plot_three_phases_two_cols(results_list, title_prefix="Majorana correlations
 
 def run_three_phases(
     nqbit=4,
-    eps=(0.0, 0.0, 0.0, 0.0),
+    eps=[0.0, 0.0, 0.0, 0.0],
     t=1.0,
     Delta=1.0,
     tc=0.5,
     out_png="figures/jj_majorana_corr_threephases_3x2.png",
 ):
-    """
-    Evaluate φ in {0, π, 2π}. For each phase, compute:
-      - <i γ0γk> with k=1..7
-      - <i γ4γk> with k=5..7
-    Then plot a 3x2 grid as requested.
-    """
     phases = [0.0, np.pi, 2*np.pi]
     results_list = []
     for th in phases:
